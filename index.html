@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>News Website</title>
+</head>
+
+<body class="font-sans bg-gray-100">
+
+    <header style="background-color: #3B82F6;" class="text-white text-center py-4">
+        <h1 class="text-2xl font-bold">News Website</h1>
+    </header>
+
+    <nav style="background-color: #1F2937;" class="text-white p-4 flex justify-between items-center">
+        <div>
+            <button id="top-headlines" onclick="onNavItemClick('top-headlines')" class="hover:text-gray-300 transition duration-300">Top
+                Headlines</button>
+            <button id="business" onclick="onNavItemClick('business')"
+                class="mx-2 hover:text-gray-300 transition duration-300">Business</button>
+            <button id="entertainment" onclick="onNavItemClick('entertainment')"
+                class="mx-2 hover:text-gray-300 transition duration-300">Entertainment</button>
+            <button id="health" onclick="onNavItemClick('health')" class="mx-2 hover:text-gray-300 transition duration-300">Health</button>
+            <button id="science" onclick="onNavItemClick('science')" class="mx-2 hover:text-gray-300 transition duration-300">Science</button>
+            <button id="sports" onclick="onNavItemClick('sports')" class="mx-2 hover:text-gray-300 transition duration-300">Sports</button>
+            <button id="technology" onclick="onNavItemClick('technology')"
+                class="mx-2 hover:text-gray-300 transition duration-300">Technology</button>
+        </div>
+
+        <div class="flex items-center">
+            <input type="text" id="searchInput"
+                class="p-2 border border-gray-500 text-black rounded-md focus:outline-none"
+                placeholder="Search news...">
+            <button id="search-button" onclick="searchNews()"
+                style="background-color: #3B82F6; color: #fff; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">Search</button>
+        </div>
+    </nav>
+
+    <div id="news-container" class="flex flex-wrap justify-around p-4"></div>
+
+    <template id="template-news-card">
+        <div style="width: 300px; margin: 15px; padding: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 5px; background-color: #fff;">
+            <h2 id="news-title"></h2>
+            <img id="news-img" alt="News Image" style="width: 100%;">
+            <p id="news-desc"></p>
+            <p id="news-source"></p>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded-md" onclick="window.open('', '_blank')">Read more</button>
+        </div>
+    </template>
+
+    <script>
+        const API_KEY = "1d3a0eefa97b499d8fbc4ee93eeb40b7";
+        const url = "https://newsapi.org/v2/everything?q=";
+
+        window.addEventListener("load", () => fetchNews("India"));
+
+        function reload() {
+            window.location.reload();
+        }
+
+        async function fetchNews(query) {
+            const res = await fetch(`${url}${query}&apiKey=${API_KEY}`);
+            const data = await res.json();
+            bindData(data.articles);
+        }
+
+        function bindData(articles) {
+            const cardsContainer = document.getElementById("news-container");
+            const newsCardTemplate = document.getElementById("template-news-card");
+
+            cardsContainer.innerHTML = "";
+
+            articles.forEach((article) => {
+                if (!article.urlToImage) return;
+                const cardClone = newsCardTemplate.content.cloneNode(true);
+                fillDataInCard(cardClone, article);
+                cardsContainer.appendChild(cardClone);
+            });
+        }
+
+        function fillDataInCard(cardClone, article) {
+            const newsImg = cardClone.querySelector("#news-img");
+            const newsTitle = cardClone.querySelector("#news-title");
+            const newsSource = cardClone.querySelector("#news-source");
+            const newsDesc = cardClone.querySelector("#news-desc");
+            const readMoreButton = cardClone.querySelector("button");
+
+            newsImg.src = article.urlToImage;
+            newsTitle.innerHTML = article.title;
+            newsDesc.innerHTML = article.description;
+
+            const date = new Date(article.publishedAt).toLocaleString("en-US", {
+                timeZone: "Asia/Jakarta",
+            });
+
+            newsSource.innerHTML = `${article.source.name} · ${date}`;
+
+            readMoreButton.addEventListener("click", () => {
+                window.open(article.url, "_blank");
+            });
+        }
+
+        let curSelectedNav = null;
+        function onNavItemClick(id) {
+            fetchNews(id);
+            const navItem = document.getElementById(id);
+            curSelectedNav?.classList.remove("active");
+            curSelectedNav = navItem;
+            curSelectedNav.classList.add("active");
+        }
+
+        const searchButton = document.getElementById("search-button");
+        const searchText = document.getElementById("searchInput");
+
+        function searchNews() {
+            const query = searchText.value;
+            if (!query) return;
+            fetchNews(query);
+            curSelectedNav?.classList.remove("active");
+            curSelectedNav = null;
+        }
+
+        searchButton.addEventListener("click", searchNews);
+    </script>
+
+</body>
+
+</html>
